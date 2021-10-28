@@ -9,10 +9,117 @@ output: html_document
 #knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(tidyverse)         # for graphing and data cleaning
+library(tidymodels)        # for modeling
+library(naniar)            # for analyzing missing values
+library(vip)               # for variable importance plots
+library(rsconnect)
+library(purrr)
+library(usemodels)         # for suggesting step_XXX() functions
+library(glmnet)            # for regularized regression, including LASSO
+library(stacks)
+library(themis) 
+library(modelr)
+```
+
+
 ## Case #1
+
+```{r}
+loans <- read_csv(file = 'loans_full_schema.csv')
+```
+
+Each row of the dataset represents an individual who recieved a loan from another person via the Lending Club. The data spans 3 months (January, February, March) of 2018, and contains important statistics regarding the individuals credit when paying back this loan. I don't see any issues with the data other than the possibility that biases could be present in the predictive model of interest rate. I need to make sure that specific jobs, or underlying variables (race, gender) are not correlated with my model.
+
+# Graph 1
+
+```{r}
+loans %>% 
+  group_by(state) %>% 
+  mutate(mean_ir = mean(interest_rate)) %>% 
+  ggplot(aes(x= state, y= mean_ir)) +
+  geom_point()+
+  geom_text(aes(label=state), vjust= 1.5, size= 2)+
+  labs(y= "Mean Interest Rate")+
+  theme(axis.ticks.x = element_blank(),
+        axis.text.x = element_blank())
+  
+```
+
+You can see from this graph that the states Hawaii, North Dakota, and Connecticut are the states with the highest average interest rates. This leads me to question why those specific states have higher average interest rates. Nonetheless, there does not seem to be a clear trend between the geography of the state and interest rate.
+
+#Graph 2
+
+```{r}
+loans %>% 
+  group_by(emp_length) %>%
+  mutate(mean_ir = mean(interest_rate)) %>% 
+  ggplot(aes(x=emp_length, y=mean_ir))+
+  geom_point()+
+  geom_line()+
+  labs(x="Length in Job", y= "Mean Interest Rate")+
+  scale_x_continuous(breaks = (0:10))
+  
+```
+
+If you look at this graph, you can see that the people who are newer to their job have higher average interest rates. This should be expected. However, people who have been at their jobs for 6 years and 8 years had unexpected high rates. This is most likely due to reasons not associated with time spent at their job, so we can assume that time on the job should be included in our model to predict interest rate.
+
+#Graph 3
+
+```{r}
+loans %>% 
+  group_by(homeownership) %>% 
+  ggplot(aes(x=homeownership, y=interest_rate))+
+  geom_boxplot()+
+  labs(y="Interest Rate")
+  
+```
+
+Taking a look at this boxplot, we see that average interest rate is highest for those who owned their homes. This is a bit of a shock because if they own the home, they will not need to pay a mortgage or rent, thus they should be more reliable in getting their loan payments payed on time. You can see though that the outliers who have high interest rates are less frequent for those people that own their house rather than renting or paying off their mortgage.
+
+#Graph 4
+
+```{r}
+sub_grade_lm <- lm(interest_rate ~ sub_grade, loans)
+loans %>% 
+  #group_by(grade) %>%
+  ggplot(aes(x=sub_grade, y=interest_rate)) +
+  geom_point()+
+  geom_abline(slope = coef(sub_grade_lm)[[2]], intercept = coef(sub_grade_lm)[[1]])+
+  labs(x="Sub Grade", y="Interest Rate")
+```
+
+This graph looks at the different interest rates for each Sub Grades. I also created a linear regression to show the line of best fit for all the points on the graph. There is a strong positive trend between interest rate and sub grade. Thus Sub Grade should be a very important feature in our predictive model of interest rate.
+
+#Graph 5
+
+```{r}
+loans %>% 
+  ggplot(aes(y=interest_rate, x=account_never_delinq_percent ))+
+  geom_point()+
+  labs(y="Interest Rate", x="Percent of non-delinquency")
+```
+
+Noticing from this graph is yes, individuals who had a higher percent of credit lines where they were never delinquent had lower interest rates. However, those that had a lower percentage of non-delinquent lines of credit also show lower interest rates. I would think those that are more typically delinquent, should have higher levels of interest because they are not reliable in paying back their loans.
+
 
 
 
 
 ## Case #2
+
+```{r}
+customer_orders <- read_csv(file = 'casestudy.csv')
+```
+
+```{r}
+customer_orders %>% 
+  group_by(year) %>% 
+  summarize(total_rev = sum(net_revenue))
+```
+
+```{r}
+  
+```
 
