@@ -1,0 +1,18 @@
+---
+title: "Stout_Case_Study"
+author: "Ben Wagner"
+date: "10/27/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+#knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Case #1
+
+
+
+
+## Case #2
+
