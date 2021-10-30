@@ -315,7 +315,4 @@ customer_orders %>%
   summarize(total_rev = sum(net_revenue))
 ```
 
-```{r}
-  
-```
 
